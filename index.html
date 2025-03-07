@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fanshawe Fitness Tracker</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtgpGjuoxHgmi2osPgNMPrpY6xZoHRIE0",
+            authDomain: "fanshawe-fitness-tracker.firebaseapp.com",
+            projectId: "fanshawe-fitness-tracker",
+            storageBucket: "fanshawe-fitness-tracker.firebasestorage.app",
+            messagingSenderId: "1067958995285",
+            appId: "1:1067958995285:web:9dcb082ced070132d1c7dc"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.firebaseAuth = auth;
+        window.db = db;
+
+        // Function to check if a user is logged in
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                document.getElementById('login-logout').textContent = 'Logout';
+                document.getElementById('workout-section').style.display = 'block';
+                document.getElementById('history-link').style.display = 'inline-block';  // Show history link for logged-in users
+            } else {
+                document.getElementById('login-logout').textContent = 'Login';
+                document.getElementById('workout-section').style.display = 'none';
+                document.getElementById('history-link').style.display = 'none';  // Hide history link for logged-out users
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav>
+        <h1>Fanshawe Fitness Tracker</h1>
+        <div class="nav-links">
+            <a href="login.html" id="login-logout">Login</a>
+            <a href="signup.html">Sign Up</a>
+            <a href="workoutHistory.html" id="history-link" style="display:none;">Workout History</a> <!-- Hidden by default -->
+        </div>
+    </nav>
+
+    <h2>Welcome to the Fanshawe Fitness Tracker!</h2>
+    <p>Choose an option to get started:</p>
+
+    <section id="workout-section" style="display:none;">
+        <h2>Log Your Workout</h2>
+        <form id="workout-form">
+            <input type="text" id="exercise-name" placeholder="Exercise Name" required />
+            <input type="number" id="exercise-duration" placeholder="Duration (minutes)" required />
+            <input type="number" id="exercise-calories" placeholder="Calories Burned" required />
+            <button type="submit">Log Workout</button>
+        </form>
+    </section>
+
+    <section id="history-section" style="display:none;">
+        <h2>Your Workout History</h2>
+        <div id="history-list">
+            <!-- Workout history will be displayed here -->
+        </div>
+    </section>
+
+    <script type="module">
+        import { saveWorkoutData, getUserWorkouts } from './fitnessData.js';
+
+        // Handle form submission
+        document.getElementById('workout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const exerciseName = document.getElementById('exercise-name');
+            const duration = document.getElementById('exercise-duration');
+            const calories = document.getElementById('exercise-calories');
+
+            const userId = firebaseAuth.currentUser.uid;  // Get current user ID
+
+            // Save workout data
+            await saveWorkoutData(userId, exerciseName.value, duration.value, calories.value);
+
+            // Alert user
+            alert("Workout data saved successfully!");
+
+            // Clear input fields
+            exerciseName.value = "";
+            duration.value = "";
+            calories.value = "";
+        });
+    </script>
+
+
+</body>
+</html>

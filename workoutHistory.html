@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout History</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtgpGjuoxHgmi2osPgNMPrpY6xZoHRIE0",
+            authDomain: "fanshawe-fitness-tracker.firebaseapp.com",
+            projectId: "fanshawe-fitness-tracker",
+            storageBucket: "fanshawe-fitness-tracker.firebasestorage.app",
+            messagingSenderId: "1067958995285",
+            appId: "1:1067958995285:web:9dcb082ced070132d1c7dc"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Function to fetch and display workout history
+        const fetchWorkoutHistory = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    const q = query(collection(db, "workouts"), where("userId", "==", user.uid));
+                    const querySnapshot = await getDocs(q);
+                    const historyList = document.getElementById('history-list');
+                    historyList.innerHTML = ''; // Clear existing entries
+
+                    querySnapshot.forEach((doc) => {
+                        const workout = doc.data();
+                        const workoutId = doc.id;
+
+                        // Create workout entry
+                        const workoutElement = document.createElement('div');
+                        workoutElement.classList.add('workout');
+                        workoutElement.innerHTML = `
+                            <h3>${workout.exercise}</h3>
+                            <p>Duration: ${workout.duration} minutes</p>
+                            <p>Calories Burned: ${workout.calories}</p>
+                            <p>Date: ${new Date(workout.date.seconds * 1000).toLocaleDateString()}</p>
+                            <button class="delete-btn" data-id="${workoutId}">Delete</button>
+                        `;
+
+                        historyList.appendChild(workoutElement);
+                    });
+
+                    // Attach event listeners to delete buttons
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', async (event) => {
+                            const workoutId = event.target.getAttribute('data-id');
+                            await deleteWorkout(workoutId);
+                        });
+                    });
+
+                } catch (e) {
+                    console.error("Error fetching workout history: ", e);
+                }
+            } else {
+                console.log("No user is signed in!");
+            }
+        };
+
+        // Function to delete workout
+        const deleteWorkout = async (workoutId) => {
+            if (confirm("Are you sure you want to delete this workout?")) {
+                try {
+                    await deleteDoc(doc(db, "workouts", workoutId));
+                    alert("Workout deleted successfully!");
+                    fetchWorkoutHistory(); // Refresh the list
+                } catch (error) {
+                    console.error("Error deleting workout:", error);
+                }
+            }
+        };
+
+        // Fetch workout history when the page loads
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchWorkoutHistory();
+            } else {
+                document.getElementById('history-list').innerHTML = "<p>Please log in to view workout history.</p>";
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav>
+        <h1>Fanshawe Fitness Tracker</h1>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="login.html" id="login-logout">Login</a>
+        </div>
+    </nav>
+
+    <h2>Your Workout History</h2>
+    <div id="history-list">
+        <!-- Workout history will be displayed here -->
+    </div>
+</body>
+</html>
+
+
