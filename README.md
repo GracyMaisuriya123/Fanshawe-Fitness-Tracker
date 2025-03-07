@@ -1,0 +1,1 @@
+Our goal is to develop a Fitness Tracker App for Fanshawe Students, which aims to enhance student wellness by providing personalized fitness tracking, goal setting, and integration with campus wellness programs.
